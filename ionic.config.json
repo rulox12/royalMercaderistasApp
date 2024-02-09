@@ -1,0 +1,7 @@
+{
+  "name": "lol",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
