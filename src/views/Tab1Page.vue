@@ -41,35 +41,69 @@
       </ion-grid>
       <ion-grid>
         <ion-row class="ion-align-items-center" v-for="(list, index) in lists" :key="list._id"
-          :class="{ 'pastel-color-1': index % 2 === 0, 'pastel-color-2': index % 2 !== 0 }" style=" border:solid">
+                 :class="{ 'pastel-color-1': index % 2 === 0, 'pastel-color-2': index % 2 !== 0 }"
+                 style="border: solid 0.1px">
           <ion-col style="font-size: 14px !important; font-weight: bold !important; color:black;"
-            size="4" :style="{ backgroundColor: getColorStyle(index) }">
+                   size="4" :style="{ backgroundColor: getColorStyle(index) }">
             {{ list.productId.displayName }}
           </ion-col>
           <ion-col v-for="field in ['INVE', 'AVER', 'LOTE', 'RECI', 'PEDI']" :key="field + list.productId"
-            class="custom" style="font-size: 16px !important;" :style="{ backgroundColor: getColorStyle(index) }">
-            <ion-input v-model="formData[date][list.productId._id][field]" type="number">
+                   class="custom" style="font-size: 20px !important; font-weight: bold;"
+                   :style="{ backgroundColor: getColorStyle(index) }">
+            <ion-input v-if="formData[date]" v-model="formData[date][list.productId._id][field]" type="number">
             </ion-input>
           </ion-col>
         </ion-row>
       </ion-grid>
-
       <ion-button class="button-save" expand="full" @click="saveFormData">Guardar</ion-button>
+      <ion-button class="button-clear" expand="full" @click="presentAlertConfirmFirstClear">Limpiar formulario
+      </ion-button>
+      <ion-fab slot="fixed" vertical="bottom" horizontal="start">
+        <ion-fab-button @click="saveFormData">
+          <ion-icon :icon="saveOutline"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
     </ion-content>
+    <ion-loading
+        :is-open="loading"
+        message="Cargando..."
+        spinner="crescent"
+    />
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { IonCol, IonButtons, IonGrid, IonRow, IonToolbar, IonHeader, IonContent, IonPage, IonTitle, IonInput, IonButton, alertController, loadingController } from '@ionic/vue';
-import { ref, onMounted } from 'vue';
-import { ListService } from '../services/ListService';
-import { OrderService } from '../services/OrderService';
-import { ShopService } from '../services/ShopService';
-import { CityService } from '../services/CityService';
+import {
+  IonCol,
+  IonButtons,
+  IonGrid,
+  IonRow,
+  IonToolbar,
+  IonHeader,
+  IonContent,
+  IonPage,
+  IonTitle,
+  IonInput,
+  IonButton,
+  alertController,
+  loadingController,
+  IonIcon,
+  IonFab,
+  IonFabButton
+} from '@ionic/vue';
+import {ref, onMounted} from 'vue';
+import {ListService} from '@/services/ListService';
+import {OrderService} from '@/services/OrderService';
+import {ShopService} from '@/services/ShopService';
+import {CityService} from '@/services/CityService';
+import {saveOutline} from 'ionicons/icons';
+import {IonLoading} from '@ionic/vue';
+
 
 const selectedShopName = ref('');
 const selectedCityName = ref('');
 const selectedShopId = ref('');
+const selectedPlatformId = ref('');
 const selectedCityId = ref('');
 const selectedUserId = ref('');
 const date = ref('')
@@ -81,6 +115,7 @@ const cityService = new CityService();
 const lists = ref([]);
 const formData = ref({});
 const alertInputs = ref([]);
+const loading = ref(false);
 
 onMounted(async () => {
   date.value = getFormattedDate(0);
@@ -92,60 +127,68 @@ const getColorStyle = (index) => {
 }
 
 const openDateAlert = async () => {
-  const alert = await alertController.create({
-    message: 'Selecciona una fecha',
-    buttons: [
-      {
-        text: 'Listo',
-        htmlAttributes: {
-          'aria-label': 'close',
-        },
-        handler(dateSelected) {
-          const selectedShop = JSON.parse(localStorage.getItem('shop') || '{}');
-          date.value = changeFormatDate(dateSelected.date)
-          console.log(date.value)
-          loadFormData()
-        }
-      },
-    ],
-    inputs: [
-      {
-        name: 'date',
-        type: 'date',
-        value: date.value,
-      }
-    ]
-  });
-  return alert.present().then(() => {
-    return true;
-  })
-};
+      const alert = await alertController.create({
+        message: 'Selecciona una fecha',
+        buttons: [
+          {
+            text: 'Listo',
+            htmlAttributes: {
+              'aria-label': 'close',
+            },
+            handler(dateSelected) {
+              loading.value = true;
+              JSON.parse(localStorage.getItem('shop') || '{}');
+              date.value = changeFormatDate(dateSelected.date)
+              loadFormData().then(()=> {
+                loading.value = false;
+              });
+            }
+          },
+        ],
+        inputs: [
+          {
+            name: 'date',
+            type: 'date',
+            value: date.value,
+          }
+        ]
+      });
+      return alert.present().then(() => {
+        return true;
+      })
+    }
+;
 
 function changeFormatDate(dateToChange: any) {
-  const [year, month, day] = dateToChange.split('-');
-  return `${day}/${month}/${year}`;
+  const dateWithoutTime = dateToChange.split('T')[0];
+  const [year, month, day] = dateWithoutTime.split('-');
+
+  return `${year}-${month}-${day}`;
 }
 
 const loadFormData = async () => {
+  formData.value = {};
   const selectedShop = JSON.parse(localStorage.getItem('shop') || '{}');
   const selectedCity = JSON.parse(localStorage.getItem('city') || '{}');
   selectedUserId.value = JSON.parse(localStorage.getItem('user') || '{}')._id;
   const dates = [date.value]
   const ordersByDate = await orderService.getOrdersByDateAndShop(selectedShop._id, dates);
-  console.log(ordersByDate);
   if (selectedShop) {
-    const listData = await listService.get(selectedShop.listId, true);
+    const listData = await listService.get(selectedShop.listId._id, true);
     lists.value = Array.isArray(listData) ? listData : [];
+    lists.value.sort((a, b) => a.productId.position - b.productId.position);
+
     dates.reduce((acc: any, date: any) => {
       let existingOrder;
       if (ordersByDate && Array.isArray(ordersByDate)) {
-        existingOrder = ordersByDate.find((order: any) => order.order.date === date);
+        existingOrder = ordersByDate.find((order: any) => changeFormatDate(order.date) == date);
       } else {
         existingOrder = false;
       }
+
       if (existingOrder) {
-        formData.value[date] = existingOrder.detailOrder.reduce((products: any, detail: any) => {
-          products[detail.product] = {
+        formData.value[date] = existingOrder.orderDetails.reduce((products: any, detail: any) => {
+          products[detail.product._id] = {
             INVE: detail.INVE || '',
             AVER: detail.AVER || '',
             LOTE: detail.LOTE || '',
@@ -168,12 +211,61 @@ const loadFormData = async () => {
           return products;
         }, {});
       }
+
+      lists.value.forEach(list => {
+        if (!formData.value[date][list.productId._id]) {
+          formData.value[date][list.productId._id] = {
+            INVE: '',
+            AVER: '',
+            LOTE: '',
+            RECI: '',
+            PEDI: '',
+            VENT: '',
+          };
+        }
+      });
     }, {});
   }
+
   selectedShopName.value = selectedShop.name || '';
   selectedShopId.value = selectedShop._id || '';
+  selectedPlatformId.value = selectedShop.platformId || '';
   selectedCityName.value = selectedCity.name || '';
   selectedCityId.value = selectedCity._id || '';
+  //console.log(formData.value)
+};
+
+
+const presentAlertConfirmFirstClear = async () => {
+  const alert = await alertController.create({
+    header: '¿Seguro deseas limpiar el formulario?',
+    buttons: [
+      {
+        text: 'NO',
+        handler: () => {
+        },
+      },
+      {
+        text: 'SI',
+        handler: () => {
+          clearForm();
+        },
+      },
+    ],
+  });
+
+  await alert.present();
+};
+
+const clearForm = () => {
+  Object.keys(formData.value).forEach(date => {
+    Object.keys(formData.value[date]).forEach(productId => {
+      const productData = formData.value[date][productId];
+      Object.keys(productData).forEach(field => {
+        productData[field] = 0;
+      });
+    });
+  });
 };
 
 const getFormattedDate = (dayDifference: any) => {
@@ -186,45 +278,58 @@ const formatDate = (date: any) => {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
+  return `${year}-${month}-${day}`;
 };
 
 const saveFormData = async () => {
-  const loading = await loadingController.create({
-    message: 'Generando la orden',
-  });
+      const loading = await loadingController.create({
+        message: 'Generando la orden',
+      });
 
-  loading.present();
+      loading.present();
 
-  const request = {
-    shopId: selectedShopId.value,
-    orders: formData.value,
-    userId: selectedUserId.value,
-    cityId: selectedCityId.value
-  }
-  console.log(request);
-  const response = await orderService.create(request);
-  loading.dismiss()
-  const alert = await alertController.create({
-    message: 'Orden generada correctamente',
-    htmlAttributes: {
-      'aria-label': 'alert dialog',
-    },
-    buttons: [
-      {
-        text: 'Listo',
+      const datesWithData = Object.keys(formData.value).filter(date => {
+        const products = formData.value[date];
+        return Object.keys(products).some(productId => {
+          const productData = products[productId];
+          return Object.values(productData).some(value => value !== '');
+        });
+      });
+
+      const request = {
+        shopId: selectedShopId.value,
+        platformId: selectedPlatformId.value,
+        orders: datesWithData.reduce((acc, date) => {
+          acc[date] = formData.value[date];
+          return acc;
+        }, {}),
+        userId: selectedUserId.value,
+        cityId: selectedCityId.value
+      };
+
+      await orderService.create(request);
+      loading.dismiss()
+      const alert = await alertController.create({
+        message: 'Orden generada correctamente',
         htmlAttributes: {
-          'aria-label': 'close',
+          'aria-label': 'alert dialog',
         },
-      },
-    ],
-  });
-  alert.present()
-};
+        buttons: [
+          {
+            text: 'Listo',
+            htmlAttributes: {
+              'aria-label': 'close',
+            },
+          },
+        ],
+      });
+      alert.present()
+    }
+;
 
 async function changeShop() {
   const query = {};
-  if (selectedCityId) {
+  if (selectedCityId.value) {
     query['cityId'] = selectedCityId.value;
   }
   const shops = await shopService.getAll(query);
@@ -248,11 +353,14 @@ const openShopSelectionAlert = async () => {
           'aria-label': 'close',
         },
         handler(selectedShop) {
+          loading.value = true;
           const shopJSON = JSON.stringify(selectedShop);
           if (shopJSON) {
             localStorage.setItem('shop', shopJSON);
           }
-          loadFormData();
+          loadFormData().then(() => {
+            loading.value = false;
+          });
         }
       },
     ],
@@ -273,7 +381,7 @@ async function changeCity() {
       type: 'radio',
       value: city,
     }));
-    openCitySelectionAlert();
+    await openCitySelectionAlert();
   }
 }
 
@@ -287,9 +395,12 @@ const openCitySelectionAlert = async () => {
           'aria-label': 'close',
         },
         handler(selectedCity) {
+          loading.value = true;
           const cityJSON = JSON.stringify(selectedCity);
           localStorage.setItem('city', cityJSON);
-          loadFormData();
+          loadFormData().then(() => {
+            loading.value = false;
+          });
         }
       },
     ],
@@ -341,11 +452,6 @@ ion-button.change-city {
   --border-radius: 10px;
 }
 
-.small-input {
-  font-size: 10px;
-  padding: 2px;
-}
-
 .button-save {
   --background: rgba(128, 188, 189, 1);
 }
@@ -356,5 +462,10 @@ ion-button.change-city {
 
 .pastel-color-2 {
   background-color: #fafce8;
+}
+
+ion-loading {
+  --backdrop-opacity: 0.8;
+  --backdrop-color: rgba(0, 0, 0, 0.5);
 }
 </style>

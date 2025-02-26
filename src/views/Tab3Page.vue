@@ -33,6 +33,9 @@
           <ion-button class="button-login" fill="outline" expand="block" @click="updateUser">Actualizar
             Contraseña</ion-button>
         </div>
+        <div class="button-container">
+          <ion-button class="button-login" fill="outline" expand="block" @click="logout">Cerrar Sesión</ion-button>
+        </div>
       </div>
       <div v-else>
         <p>No se pudo cargar la información del usuario.</p>
@@ -46,6 +49,7 @@
 import { alertController, IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonItem, IonInput, IonButton } from '@ionic/vue';
 import { ref, onMounted } from 'vue';
 import { UserService } from '@/services/UserService';
+import { logoWindows } from 'ionicons/icons';
 
 const userService = new UserService();
 const user = ref(null);
@@ -56,6 +60,11 @@ const password = ref({
 
 const loadUser = async () => {
   user.value = JSON.parse(localStorage.getItem('user') || '{}');
+};
+
+const logout = async () => {
+  localStorage.clear();
+  window.location.reload(); 
 };
 
 const updateUser = async () => {

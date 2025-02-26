@@ -2,7 +2,7 @@
     <ion-page>
         <br>
         <div class="logo-container">
-            <ion-img src="https://mercadoroyal.com/favicon.ico"
+            <ion-img src="https://i.ibb.co/T2Vq30h/logo-royal-web.jpg"
                 alt="The Wisconsin State Capitol building in Madison, WI at night"></ion-img>
         </div>
         <ion-content class="ion-padding">
@@ -32,7 +32,7 @@ import { IonPage, IonItem, IonButton, IonInput, alertController, IonImg, IonCont
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
 import { AuthService } from '@/services/AuthService';
-import { ShopService } from '../services/ShopService';
+import { ShopService } from '@/services/ShopService';
 import { CityService } from '@/services/CityService';
 
 const email = ref('');

@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_URL } from '../config';
 
-const apiUrl = "https://mercaderista.royalfruit.com.co/api";
+const apiUrl = API_URL;
 
 export class ListService {
 

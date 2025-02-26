@@ -1,11 +1,11 @@
 import axios from 'axios';
-
+import { API_URL } from '../config';
 interface User {
     id: string;
     email: string;
 }
 
-const apiUrl = "https://mercaderista.royalfruit.com.co/api";
+const apiUrl = API_URL;
 
 export class AuthService {
     private currentUser: User | null = null;
