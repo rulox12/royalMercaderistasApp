@@ -50,8 +50,23 @@
           <ion-col v-for="field in ['INVE', 'AVER', 'LOTE', 'RECI', 'PEDI']" :key="field + list.productId"
                    class="custom" style="font-size: 20px !important; font-weight: bold;"
                    :style="{ backgroundColor: getColorStyle(index) }">
-            <ion-input v-if="formData[date]" v-model="formData[date][list.productId._id][field]" type="number">
+            <ion-input v-if="formData[date]" type="number" v-model="formData[date][list.productId._id][field]" @input="limitInput($event, list.productId._id, field)">
             </ion-input>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="12">
+            <ion-textarea
+                v-model="details"
+                label="Detalle de la orden"
+                label-placement="floating"
+                fill="outline"
+                auto-grow="true"
+                class="custom-textarea"
+                placeholder="Escribe detalles..."
+            ></ion-textarea>
           </ion-col>
         </ion-row>
       </ion-grid>
@@ -89,7 +104,8 @@ import {
   loadingController,
   IonIcon,
   IonFab,
-  IonFabButton
+  IonFabButton,
+  IonTextarea
 } from '@ionic/vue';
 import {ref, onMounted} from 'vue';
 import {ListService} from '@/services/ListService';
@@ -116,6 +132,7 @@ const lists = ref([]);
 const formData = ref({});
 const alertInputs = ref([]);
 const loading = ref(false);
+const details = ref();
 
 onMounted(async () => {
   date.value = getFormattedDate(0);
@@ -125,6 +142,23 @@ onMounted(async () => {
 const getColorStyle = (index) => {
   return index % 2 === 0 ? '#e8fcef' : '#fafce8'
 }
+
+const limitInput = (event, productId, field) => {
+  let value = event.target.value;
+
+  // Limita a 3 caracteres numéricos
+  if (field !== 'LOTE' && value.length > 3) {
+    value = value.slice(0, 3);
+  }
+
+  // Evita ceros a la izquierda, pero permite "0" solo si es el único valor
+  value = value.replace(/^0+/, '') || '0';
+
+  // Asignar valor en Vue 3
+  if (formData.value[date.value] && formData.value[date.value][productId]) {
+    formData.value[date.value][productId][field] = value;
+  }
+};
 
 const openDateAlert = async () => {
       const alert = await alertController.create({
@@ -198,6 +232,8 @@ const loadFormData = async () => {
           };
           return products;
         }, {});
+
+        details.value = existingOrder.details || '';
       } else {
         formData.value[date] = lists.value.reduce((products, list) => {
           products[list.productId._id] = {
@@ -210,6 +246,8 @@ const loadFormData = async () => {
           };
           return products;
         }, {});
+
+        details.value = ''; // limpiar si no hay orden
       }
 
       lists.value.forEach(list => {
@@ -304,9 +342,10 @@ const saveFormData = async () => {
           return acc;
         }, {}),
         userId: selectedUserId.value,
-        cityId: selectedCityId.value
+        cityId: selectedCityId.value,
+        details: details.value
       };
-
+      console.log(details.value);
       await orderService.create(request);
       loading.dismiss()
       const alert = await alertController.create({
@@ -467,5 +506,15 @@ ion-button.change-city {
 ion-loading {
   --backdrop-opacity: 0.8;
   --backdrop-color: rgba(0, 0, 0, 0.5);
+}
+
+:deep(.custom-textarea) {
+  --border-color: rgba(128, 188, 189, 1) !important;
+  --border-color-focused: rgba(128, 188, 189, 1) !important;
+  --highlight-color-focused: rgba(128, 188, 189, 1) !important;
+  --highlight-color: rgba(128, 188, 189, 1) !important;
+  --placeholder-color: #666;
+  --color: black;
+  --background: white;
 }
 </style>
