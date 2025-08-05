@@ -12,13 +12,13 @@
       <ion-toolbar>
         <ion-title>{{ date }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="openDateAlert">CAMBIAR FECHA</ion-button>
+          <ion-button class="change-shop" @click="openDateAlert">CAMBIAR FECHA</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
       <ion-grid>
-        <ion-row class="ion-align-items-end">
+        <ion-row class="ion-align-items-end header-row">
           <ion-col style="font-size: 12px !important" size="4">
             NOMBRE
           </ion-col>
@@ -454,6 +454,15 @@ const openCitySelectionAlert = async () => {
 </script>
 
 <style scoped>
+.header-row {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: rgba(128, 188, 189, 1); /* mismo color que tus columnas de título */
+  color: white;
+  border-bottom: 1px solid #ccc;
+}
+
 ion-col {
   background-color: rgba(128, 188, 189, 1);
   padding: 0px;
@@ -471,7 +480,7 @@ ion-col.custom {
 }
 
 ion-toolbar.header {
-  --background: linear-gradient(90deg, rgba(170, 217, 187, 1) 0%, rgba(128, 188, 189, 1) 50%, rgba(249, 247, 201, 1) 100%);
+  --background: rgb(199, 233, 233);
   --color: #fff;
 }
 
