@@ -41,16 +41,16 @@
       </ion-grid>
       <ion-grid>
         <ion-row class="ion-align-items-center" v-for="(list, index) in lists" :key="list._id"
-                 :class="{ 'pastel-color-1': index % 2 === 0, 'pastel-color-2': index % 2 !== 0 }"
-                 style="border: solid 0.1px">
-          <ion-col style="font-size: 14px !important; font-weight: bold !important; color:black;"
-                   size="4" :style="{ backgroundColor: getColorStyle(index) }">
+          :class="{ 'pastel-color-1': index % 2 === 0, 'pastel-color-2': index % 2 !== 0 }" style="border: solid 0.1px">
+          <ion-col style="font-size: 14px !important; font-weight: bold !important; color:black;" size="4"
+            :style="{ backgroundColor: getColorStyle(index) }">
             {{ list.productId.displayName }}
           </ion-col>
           <ion-col v-for="field in ['INVE', 'AVER', 'LOTE', 'RECI', 'PEDI']" :key="field + list.productId"
-                   class="custom" style="font-size: 20px !important; font-weight: bold;"
-                   :style="{ backgroundColor: getColorStyle(index) }">
-            <ion-input v-if="formData[date]" type="number" v-model="formData[date][list.productId._id][field]" @input="limitInput($event, list.productId._id, field)">
+            class="custom" style="font-size: 20px !important; font-weight: bold;"
+            :style="{ backgroundColor: getColorStyle(index) }">
+            <ion-input v-if="formData[date]" type="number" v-model="formData[date][list.productId._id][field]"
+              @input="limitInput($event, list.productId._id, field)">
             </ion-input>
           </ion-col>
         </ion-row>
@@ -58,15 +58,8 @@
       <ion-grid>
         <ion-row>
           <ion-col size="12">
-            <ion-textarea
-                v-model="details"
-                label="Detalle de la orden"
-                label-placement="floating"
-                fill="outline"
-                auto-grow="true"
-                class="custom-textarea"
-                placeholder="Escribe detalles..."
-            ></ion-textarea>
+            <ion-textarea v-model="details" label="Detalle de la orden" label-placement="floating" fill="outline"
+              :auto-grow="true" class="custom-textarea" placeholder="Escribe detalles..."></ion-textarea>
           </ion-col>
         </ion-row>
       </ion-grid>
@@ -79,11 +72,7 @@
         </ion-fab-button>
       </ion-fab>
     </ion-content>
-    <ion-loading
-        :is-open="loading"
-        message="Cargando..."
-        spinner="crescent"
-    />
+    <ion-loading :is-open="loading" message="Cargando..." spinner="crescent" />
   </ion-page>
 </template>
 
@@ -107,13 +96,13 @@ import {
   IonFabButton,
   IonTextarea
 } from '@ionic/vue';
-import {ref, onMounted} from 'vue';
-import {ListService} from '@/services/ListService';
-import {OrderService} from '@/services/OrderService';
-import {ShopService} from '@/services/ShopService';
-import {CityService} from '@/services/CityService';
-import {saveOutline} from 'ionicons/icons';
-import {IonLoading} from '@ionic/vue';
+import { ref, onMounted } from 'vue';
+import { ListService } from '@/services/ListService';
+import { OrderService } from '@/services/OrderService';
+import { ShopService } from '@/services/ShopService';
+import { CityService } from '@/services/CityService';
+import { saveOutline } from 'ionicons/icons';
+import { IonLoading } from '@ionic/vue';
 
 
 const selectedShopName = ref('');
@@ -146,52 +135,54 @@ const getColorStyle = (index) => {
 const limitInput = (event, productId, field) => {
   let value = event.target.value;
 
+  if (value === '') {
+    formData.value[date.value][productId][field] = '';
+    return;
+  }
+
   // Limita a 3 caracteres numéricos
   if (field !== 'LOTE' && value.length > 3) {
     value = value.slice(0, 3);
   }
 
-  // Evita ceros a la izquierda, pero permite "0" solo si es el único valor
+  // Elimina ceros a la izquierda, pero permite '0'
   value = value.replace(/^0+/, '') || '0';
 
-  // Asignar valor en Vue 3
-  if (formData.value[date.value] && formData.value[date.value][productId]) {
-    formData.value[date.value][productId][field] = value;
-  }
+  formData.value[date.value][productId][field] = value;
 };
 
 const openDateAlert = async () => {
-      const alert = await alertController.create({
-        message: 'Selecciona una fecha',
-        buttons: [
-          {
-            text: 'Listo',
-            htmlAttributes: {
-              'aria-label': 'close',
-            },
-            handler(dateSelected) {
-              loading.value = true;
-              JSON.parse(localStorage.getItem('shop') || '{}');
-              date.value = changeFormatDate(dateSelected.date)
-              loadFormData().then(()=> {
-                loading.value = false;
-              });
-            }
-          },
-        ],
-        inputs: [
-          {
-            name: 'date',
-            type: 'date',
-            value: date.value,
-          }
-        ]
-      });
-      return alert.present().then(() => {
-        return true;
-      })
-    }
-;
+  const alert = await alertController.create({
+    message: 'Selecciona una fecha',
+    buttons: [
+      {
+        text: 'Listo',
+        htmlAttributes: {
+          'aria-label': 'close',
+        },
+        handler(dateSelected) {
+          loading.value = true;
+          JSON.parse(localStorage.getItem('shop') || '{}');
+          date.value = changeFormatDate(dateSelected.date)
+          loadFormData().then(() => {
+            loading.value = false;
+          });
+        }
+      },
+    ],
+    inputs: [
+      {
+        name: 'date',
+        type: 'date',
+        value: date.value,
+      }
+    ]
+  });
+  return alert.present().then(() => {
+    return true;
+  })
+}
+  ;
 
 function changeFormatDate(dateToChange: any) {
   const dateWithoutTime = dateToChange.split('T')[0];
@@ -296,14 +287,19 @@ const presentAlertConfirmFirstClear = async () => {
 };
 
 const clearForm = () => {
-  Object.keys(formData.value).forEach(date => {
-    Object.keys(formData.value[date]).forEach(productId => {
-      const productData = formData.value[date][productId];
-      Object.keys(productData).forEach(field => {
-        productData[field] = 0;
-      });
-    });
-  });
+  formData.value[date.value] = lists.value.reduce((products, list) => {
+    products[list.productId._id] = {
+      INVE: '',
+      AVER: '',
+      LOTE: '',
+      RECI: '',
+      PEDI: '',
+      VENT: '',
+    };
+    return products;
+  }, {});
+
+  details.value = '';
 };
 
 const getFormattedDate = (dayDifference: any) => {
@@ -320,51 +316,51 @@ const formatDate = (date: any) => {
 };
 
 const saveFormData = async () => {
-      const loading = await loadingController.create({
-        message: 'Generando la orden',
-      });
+  const loading = await loadingController.create({
+    message: 'Generando la orden',
+  });
 
-      loading.present();
+  loading.present();
 
-      const datesWithData = Object.keys(formData.value).filter(date => {
-        const products = formData.value[date];
-        return Object.keys(products).some(productId => {
-          const productData = products[productId];
-          return Object.values(productData).some(value => value !== '');
-        });
-      });
+  const datesWithData = Object.keys(formData.value).filter(date => {
+    const products = formData.value[date];
+    return Object.keys(products).some(productId => {
+      const productData = products[productId];
+      return Object.values(productData).some(value => value !== '');
+    });
+  });
 
-      const request = {
-        shopId: selectedShopId.value,
-        platformId: selectedPlatformId.value,
-        orders: datesWithData.reduce((acc, date) => {
-          acc[date] = formData.value[date];
-          return acc;
-        }, {}),
-        userId: selectedUserId.value,
-        cityId: selectedCityId.value,
-        details: details.value
-      };
-      console.log(details.value);
-      await orderService.create(request);
-      loading.dismiss()
-      const alert = await alertController.create({
-        message: 'Orden generada correctamente',
+  const request = {
+    shopId: selectedShopId.value,
+    platformId: selectedPlatformId.value,
+    orders: datesWithData.reduce((acc, date) => {
+      acc[date] = formData.value[date];
+      return acc;
+    }, {}),
+    userId: selectedUserId.value,
+    cityId: selectedCityId.value,
+    details: details.value
+  };
+  console.log(details.value);
+  await orderService.create(request);
+  loading.dismiss()
+  const alert = await alertController.create({
+    message: 'Orden generada correctamente',
+    htmlAttributes: {
+      'aria-label': 'alert dialog',
+    },
+    buttons: [
+      {
+        text: 'Listo',
         htmlAttributes: {
-          'aria-label': 'alert dialog',
+          'aria-label': 'close',
         },
-        buttons: [
-          {
-            text: 'Listo',
-            htmlAttributes: {
-              'aria-label': 'close',
-            },
-          },
-        ],
-      });
-      alert.present()
-    }
-;
+      },
+    ],
+  });
+  alert.present()
+}
+  ;
 
 async function changeShop() {
   const query = {};
@@ -439,6 +435,7 @@ const openCitySelectionAlert = async () => {
           localStorage.setItem('city', cityJSON);
           loadFormData().then(() => {
             loading.value = false;
+            changeShop();
           });
         }
       },
@@ -458,7 +455,8 @@ const openCitySelectionAlert = async () => {
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: rgba(128, 188, 189, 1); /* mismo color que tus columnas de título */
+  background-color: rgba(128, 188, 189, 1);
+  /* mismo color que tus columnas de título */
   color: white;
   border-bottom: 1px solid #ccc;
 }
@@ -472,7 +470,8 @@ ion-col {
 
 ion-col.custom {
   background-color: #ffffff;
-  border-left: 1px solid #2E4F4F; /* Borde a la izquierda */
+  border-left: 1px solid #2E4F4F;
+  /* Borde a la izquierda */
   border-right: 1px solid #2E4F4F;
   color: #135d54;
   text-align: center;
