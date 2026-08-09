@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { API_URL } from '@/config';
+import axios from "axios";
+import { API_URL } from "@/config";
 
 const apiUrl = API_URL;
 
@@ -14,37 +14,58 @@ export class OrderService {
                 return false;
             }
         } catch (error) {
-            console.error('Error en la solicitud:', error);
+            console.error("Error en la solicitud:", error);
             return false;
         }
     }
     async getOrdersByDateAndShop(shopId: any, dates: any): Promise<boolean> {
         try {
-            const response = await axios.post(`${apiUrl}/orders/get-orders-by-dates-and-shop`, { shopId, dates });
+            const response = await axios.post(
+                `${apiUrl}/orders/get-orders-by-dates-and-shop`,
+                { shopId, dates },
+            );
             if (response.status === 200) {
                 return response.data;
             } else {
                 return false;
             }
         } catch (error) {
-            console.error('Error en la solicitud:', error);
+            console.error("Error en la solicitud:", error);
             return false;
         }
     }
 
     async getAll(filters: any): Promise<boolean> {
         try {
-            const response = await axios.get(`${apiUrl}/orders`, { params: filters });
+            const response = await axios.get(`${apiUrl}/orders`, {
+                params: filters,
+            });
             if (response.status === 200) {
                 return response.data;
             } else {
                 return false;
             }
         } catch (error) {
-            console.error('Error en la solicitud:', error);
+            console.error("Error en la solicitud:", error);
             return false;
         }
     }
 
-
+    async getUnregisteredOrdersByShopAndRange(
+        shopId: string,
+        startDate: string,
+        endDate: string,
+    ) {
+        try {
+            const url = `${apiUrl}/orders/not-received/shop/${shopId}/from/${startDate}/to/${endDate}`;
+            const response = await axios.get(url);
+            return response.data;
+        } catch (error) {
+            console.error(
+                "Error fetching unregistered orders by shop and range:",
+                error,
+            );
+            return false;
+        }
+    }
 }

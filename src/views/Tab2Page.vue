@@ -25,6 +25,14 @@
             <span class="label">Nombre:</span>
             <span class="value">{{ order.shop.name }}</span>
           </div>
+          <div class="order-row">
+            <span class="label">Creado:</span>
+            <span class="value">{{ formatDateTime(order.createdAt) }}</span>
+          </div>
+          <div class="order-row">
+            <span class="label">Actualizado:</span>
+            <span class="value">{{ formatDateTime(order.updatedAt) }}</span>
+          </div>
         </div>
       </div>
     </ion-content>
@@ -44,6 +52,23 @@ const orders = ref([]);
 const user = ref();
 const optionsDate = {
   timeZone: 'UTC'
+};
+
+const formatDateTime = (dateValue: string) => {
+  if (!dateValue) {
+    return '-';
+  }
+
+  return new Date(dateValue).toLocaleString('es-CO', {
+    timeZone: 'America/Bogota',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
 };
 
 interface OrderResponse {
